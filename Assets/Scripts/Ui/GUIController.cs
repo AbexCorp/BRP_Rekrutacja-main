@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class GUIController : MonoBehaviour
 {
@@ -42,6 +45,16 @@ public class GUIController : MonoBehaviour
         if (active) ScreenBlocker.AddPopUpView(popUpView);
         else ScreenBlocker.RemovePopUpView(popUpView);
     }
+    ////////////////////////////////////
+    public void SetDefaultUiSelection()
+    {
+        ChangeUISelection(EventSystem.current.firstSelectedGameObject);
+    }
+    public void ChangeUISelection(GameObject uiObject)
+    {
+        EventSystem.current.SetSelectedGameObject(uiObject);
+    }
+    ////////////////////////////////////
 
 
     #region IN GAME GUI Clicks

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class SoulEnemy : MonoBehaviour, IEnemy
 {
@@ -29,6 +31,7 @@ public class SoulEnemy : MonoBehaviour, IEnemy
     {
         ActiveInteractionPanel(false);
         ActiveActionPanel(true);
+        GUIController.Instance.ChangeUISelection(ActionsPanelObject.GetComponentsInChildren<Selectable>().FirstOrDefault().gameObject);
     }
 
     private void ActiveInteractionPanel(bool active)
