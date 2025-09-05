@@ -54,6 +54,18 @@ public class GUIController : MonoBehaviour
     {
         EventSystem.current.SetSelectedGameObject(uiObject);
     }
+    private void FindNavigation()
+    {
+        Debug.Log(EventSystem.current.currentInputModule == null);
+        var inputModule = EventSystem.current.currentInputModule as UnityEngine.InputSystem.UI.InputSystemUIInputModule;
+        InputAction navigation = inputModule.actionsAsset.FindAction("Navigate");
+        navigation.performed += AttemptNavigation;
+    }
+    private void AttemptNavigation(InputAction.CallbackContext context)
+    {
+        if (EventSystem.current.currentSelectedGameObject == null)
+            SetDefaultUiSelection();
+    }
     ////////////////////////////////////
 
 
