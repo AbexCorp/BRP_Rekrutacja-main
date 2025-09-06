@@ -78,7 +78,6 @@ public class GUIController : MonoBehaviour
     }
     private void SetGamepadNavigation(InputAction.CallbackContext context)
     {
-        Debug.Log(_activeViews.Count);
         PointerNavigation = false;
         if (EventSystem.current.currentSelectedGameObject == null)
             SetDefaultUiSelection();
