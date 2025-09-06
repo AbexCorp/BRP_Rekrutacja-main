@@ -31,7 +31,7 @@ public class SoulEnemy : MonoBehaviour, IEnemy
     {
         ActiveInteractionPanel(false);
         ActiveActionPanel(true);
-        GUIController.Instance.ChangeUISelection(ActionsPanelObject.GetComponentsInChildren<Selectable>().FirstOrDefault().gameObject);
+        GUIController.Instance.ChangeUISelection(ActionsPanelObject.GetComponentsInChildren<Selectable>().Where(x => x.interactable).FirstOrDefault().gameObject);
     }
 
     private void ActiveInteractionPanel(bool active)

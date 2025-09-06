@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class UiView : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class UiView : MonoBehaviour
 
     [SerializeField] private bool CloseOnNewView = true;
     [SerializeField] private Button BackButon;
+    [SerializeField] private Selectable DefaultSelection = null;
+    [SerializeField] private GameObject DefaultSelectionDynamicContainer = null;
 
     private UiView _parentView;
 
@@ -43,6 +46,7 @@ public class UiView : MonoBehaviour
     public void ActiveView(bool active)
     {
         this.gameObject.SetActive(active);
+        GUIController.Instance.SetActiveView(this);
     }
 
     public void ActiveView(Action onBackButtonAction = null)
@@ -50,6 +54,7 @@ public class UiView : MonoBehaviour
         if (onBackButtonAction != null) BackButon.onClick.AddListener(() => onBackButtonAction());
 
         if (!gameObject.activeSelf) this.ActiveView(true);
+        else GUIController.Instance.SetActiveView(this);
     }
 
     public void DisableView()
@@ -71,6 +76,7 @@ public class UiView : MonoBehaviour
             _parentView.ActiveView();
         }
 
+        GUIController.Instance.SetActiveView(this);
         Destroy(this.gameObject);
     }
 
@@ -83,4 +89,21 @@ public class UiView : MonoBehaviour
     {
         return BackButon;
     }
+    public Selectable GetDefaultSelection()
+    {
+        if (DefaultSelection != null)
+            return DefaultSelection;
+        else if (DefaultSelectionDynamicContainer != null)
+            return GetDynamicDefaultSelection();
+        else
+            return GetBackButton();
+    }
+    private Selectable GetDynamicDefaultSelection()
+    {
+        Selectable s = DefaultSelectionDynamicContainer.GetComponentsInChildren<Selectable>().Where(x => x.interactable).FirstOrDefault();
+        if (s == null)
+            return GetBackButton();
+        return s;
+    }
+
 }

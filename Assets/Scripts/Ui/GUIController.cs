@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -27,6 +30,8 @@ public class GUIController : MonoBehaviour
     private void Start()
     {
         if (ScreenBlocker) ScreenBlocker.InitBlocker();
+        StartCoroutine(FindInputActions());
+        ChangeUISelection(null);
     }
 
     private void ActiveInGameGUI(bool active)
@@ -45,28 +50,79 @@ public class GUIController : MonoBehaviour
         if (active) ScreenBlocker.AddPopUpView(popUpView);
         else ScreenBlocker.RemovePopUpView(popUpView);
     }
-    ////////////////////////////////////
-    public void SetDefaultUiSelection()
+
+
+    #region Gamepad Navigation
+
+    public bool PointerNavigation { get; private set; }
+    private IEnumerator FindInputActions()
     {
-        ChangeUISelection(EventSystem.current.firstSelectedGameObject);
-    }
-    public void ChangeUISelection(GameObject uiObject)
-    {
-        EventSystem.current.SetSelectedGameObject(uiObject);
-    }
-    private void FindNavigation()
-    {
-        Debug.Log(EventSystem.current.currentInputModule == null);
+        yield return null;
+
         var inputModule = EventSystem.current.currentInputModule as UnityEngine.InputSystem.UI.InputSystemUIInputModule;
+
         InputAction navigation = inputModule.actionsAsset.FindAction("Navigate");
-        navigation.performed += AttemptNavigation;
+        navigation.performed += SetGamepadNavigation;
+
+        InputAction point = inputModule.actionsAsset.FindAction("Point");
+        point.performed += SetPointerNavigation;
+
+        InputAction cancel = inputModule.actionsAsset.FindAction("Cancel");
+        cancel.performed += TriggerCancel;
     }
-    private void AttemptNavigation(InputAction.CallbackContext context)
+    private void SetPointerNavigation(InputAction.CallbackContext context)
     {
+        PointerNavigation = true;
+        if (EventSystem.current.currentSelectedGameObject != null)
+            ChangeUISelection(null);
+    }
+    private void SetGamepadNavigation(InputAction.CallbackContext context)
+    {
+        Debug.Log(_activeViews.Count);
+        PointerNavigation = false;
         if (EventSystem.current.currentSelectedGameObject == null)
             SetDefaultUiSelection();
     }
-    ////////////////////////////////////
+    private void TriggerCancel(InputAction.CallbackContext context)
+    {
+        if (_activeViews.LastOrDefault() == null)
+            return;
+        _activeViews.LastOrDefault().GetBackButton().onClick?.Invoke();
+    }
+
+
+    private List<UiView> _activeViews = new();
+    public void SetActiveView(UiView view)
+    {
+        if(_activeViews.Contains(view) == false)
+            _activeViews.Add(view);
+        else if(_activeViews.Contains(view))
+            _activeViews.Remove(view);
+        SetDefaultUiSelection();
+    }
+    public void SetDefaultUiSelection()
+    {
+        if (_activeViews.Count > 0)
+        {
+            if(_activeViews.LastOrDefault() != null)
+                ChangeUISelection(_activeViews.LastOrDefault().GetDefaultSelection().gameObject);
+        }
+        else
+            ChangeUISelection(EventSystem.current.firstSelectedGameObject);
+    }
+    public void ChangeUISelection(GameObject uiObject)
+    {
+        if (PointerNavigation)
+            return;
+        StartCoroutine(DelayUISelectionChange(uiObject));
+    }
+    private IEnumerator DelayUISelectionChange(GameObject uiObject)
+    {
+        yield return null;
+        EventSystem.current.SetSelectedGameObject(uiObject);
+    }
+    
+    #endregion
 
 
     #region IN GAME GUI Clicks
