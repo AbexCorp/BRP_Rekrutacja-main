@@ -56,8 +56,6 @@ public class InventoryView : UiView
         _currentSoulInformation = soulInformation;
         _currentSelectedGameObject = soulInformation.gameObject;
         SetupSoulInformation(soulInformation.soulItem);
-        if (soulInformation.gameObject.TryGetComponent<RectTransform>(out var rec))
-            UpdateScrollBar(rec);
     }
 
 
@@ -68,6 +66,8 @@ public class InventoryView : UiView
     [SerializeField] private GridLayoutGroup ScrollGridLayoutGroup;
     public void UpdateScrollBar(RectTransform selectedElement)
     {
+        if (GUIController.Instance.PointerNavigation)
+            return;
         float cellHeight = ScrollGridLayoutGroup.cellSize.y;
         float verticalSpacing = ScrollGridLayoutGroup.spacing.y;
 
@@ -142,6 +142,14 @@ public class InventoryView : UiView
                 Confirm_OnClick = () => UseCurrentSoul(isInCorrectLocalization)
             };
             UseButton.onClick.AddListener(() => GUIController.Instance.ShowPopUpMessage(popUpInfo));
+
+            if(UseButton.TryGetComponent<Selectable>(out var b))
+            {
+                if(isInCorrectLocalization == false)
+                    b.interactable = false;
+                else
+                    b.interactable = true;
+            }
         }
         UseButton.gameObject.SetActive(active);
     }

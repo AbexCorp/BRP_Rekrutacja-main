@@ -1,10 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class GUIController : MonoBehaviour
 {
@@ -32,6 +35,7 @@ public class GUIController : MonoBehaviour
         if (ScreenBlocker) ScreenBlocker.InitBlocker();
         StartCoroutine(FindInputActions());
         ChangeUISelection(null);
+        GameEvents.EnemyKilled += AddScore;
     }
 
     private void ActiveInGameGUI(bool active)
@@ -138,7 +142,27 @@ public class GUIController : MonoBehaviour
             go.interactable = value;
         }
     }
-    
+
+    #endregion
+
+
+    #region ScoreBoard
+
+    [SerializeField] private TMP_Text _scoreCounter;
+    private int _score = 0;
+    public void AddScore(IEnemy enemy)
+    {
+        if(enemy.GetEnemyObject().TryGetComponent<SoulEnemy>(out var e))
+        {
+            if (e.DiedToVulnerability)
+                _score += 1;
+        }
+        _score += 2;
+        if(_score < 0)
+            _score = int.MaxValue;
+        _scoreCounter.text = $"Score: {_score}";
+    }
+
     #endregion
 
 
