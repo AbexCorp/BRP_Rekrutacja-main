@@ -9,6 +9,9 @@ public class SoulEnemy : MonoBehaviour, IEnemy
     [SerializeField] private SpriteRenderer EnemySpriteRenderer;
 
     private SpawnPoint _enemyPosition;
+    public bool VulnerableToBow { get; private set; }
+    public bool VulnerableToSword { get; private set; }
+    public bool DiedToVulnerability { get; private set; }
 
     public void SetupEnemy(Sprite sprite, SpawnPoint spawnPoint)
     {
@@ -29,9 +32,37 @@ public class SoulEnemy : MonoBehaviour, IEnemy
 
     private void ActiveCombatWithEnemy()
     {
+        GenerateVulnerability();
         ActiveInteractionPanel(false);
         ActiveActionPanel(true);
-        GUIController.Instance.ChangeUISelection(ActionsPanelObject.GetComponentsInChildren<Selectable>().FirstOrDefault().gameObject);
+        GUIController.Instance.ChangeUISelection(ActionsPanelObject.GetComponentsInChildren<Selectable>().Where(x => x.interactable).FirstOrDefault().gameObject);
+    }
+    private void GenerateVulnerability()
+    {
+        float v = Random.Range(0f, 1f);
+        if (v < 0.2)
+            return;
+        else if (v < 0.6f)
+        {
+            VulnerableToBow = true;
+            VulnerabilityColor("Bow_Button");
+        }
+        else
+        {
+            VulnerableToSword = true;
+            VulnerabilityColor("Sword_Button");
+        }
+    }
+    private void VulnerabilityColor(string name)
+    {
+        var b = ActionsPanelObject.GetComponentsInChildren<Button>().Where(x => x.gameObject.name == name).FirstOrDefault();
+        if(b != null)
+        {
+            ColorBlock c = b.colors;
+            c.selectedColor = new Color(0.98f, 0.49f, 0.125f, 1);
+            c.highlightedColor = c.selectedColor;
+            b.colors = c;
+        }
     }
 
     private void ActiveInteractionPanel(bool active)
@@ -47,11 +78,15 @@ public class SoulEnemy : MonoBehaviour, IEnemy
     private void UseBow()
     {
         // USE BOW
+        if (VulnerableToBow)
+            DiedToVulnerability = true;
         GameEvents.EnemyKilled?.Invoke(this);
     }
 
     private void UseSword()
     {
+        if (VulnerableToSword)
+            DiedToVulnerability = true;
         GameEvents.EnemyKilled?.Invoke(this);
         // USE SWORD
     }

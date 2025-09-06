@@ -28,7 +28,8 @@ public class InventoryView : UiView
         for (int i = 0, j = SoulController.Instance.Souls.Count; i < j; i++)
         {
             SoulInformation newSoul = Instantiate(SoulItemPlaceHolder.gameObject, _contentParent).GetComponent<SoulInformation>();
-            newSoul.SetSoulItem(SoulController.Instance.Souls[i], () => SoulItem_OnClick(newSoul));
+            newSoul.gameObject.TryGetComponent<RectTransform>(out var rec);
+            newSoul.SetSoulItem(SoulController.Instance.Souls[i], () => SoulItem_OnClick(newSoul), () => UpdateScrollBar(rec));
         }
 
         SoulItemPlaceHolder.gameObject.SetActive(false);
@@ -56,6 +57,35 @@ public class InventoryView : UiView
         _currentSelectedGameObject = soulInformation.gameObject;
         SetupSoulInformation(soulInformation.soulItem);
     }
+
+
+    #region Scroll
+
+    [SerializeField] private ScrollRect Scroll;
+    [SerializeField] private RectTransform ScrollContent;
+    [SerializeField] private GridLayoutGroup ScrollGridLayoutGroup;
+    public void UpdateScrollBar(RectTransform selectedElement)
+    {
+        if (GUIController.Instance.PointerNavigation)
+            return;
+        float cellHeight = ScrollGridLayoutGroup.cellSize.y;
+        float verticalSpacing = ScrollGridLayoutGroup.spacing.y;
+
+        Vector3 selectedElementPos = selectedElement.localPosition;
+
+        int rowIndex = Mathf.FloorToInt(-selectedElementPos.y / (cellHeight + verticalSpacing));
+
+        float contentHeight = ScrollContent.rect.height;
+        float viewportHeight = Scroll.viewport.rect.height;
+        float scrollableHeight = contentHeight - viewportHeight;
+
+        float targetYPosition = rowIndex * (cellHeight + verticalSpacing);
+        float targetNormalizedPosition = Mathf.InverseLerp(0, scrollableHeight, targetYPosition);
+        Scroll.verticalNormalizedPosition = Mathf.Clamp01(1 - targetNormalizedPosition);
+    }
+
+    #endregion
+
 
     private void SetupSoulInformation(SoulItem soulItem)
     {
@@ -86,6 +116,7 @@ public class InventoryView : UiView
         else
         {
             //USE SOUL
+            GameEvents.SoulUsed?.Invoke(_currentSoulInformation);
             Destroy(_currentSelectedGameObject);
             ClearSoulInformation();
         }
@@ -112,6 +143,14 @@ public class InventoryView : UiView
                 Confirm_OnClick = () => UseCurrentSoul(isInCorrectLocalization)
             };
             UseButton.onClick.AddListener(() => GUIController.Instance.ShowPopUpMessage(popUpInfo));
+
+            if(UseButton.TryGetComponent<Selectable>(out var b))
+            {
+                if(isInCorrectLocalization == false)
+                    b.interactable = false;
+                else
+                    b.interactable = true;
+            }
         }
         UseButton.gameObject.SetActive(active);
     }
