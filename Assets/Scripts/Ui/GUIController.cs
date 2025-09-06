@@ -112,7 +112,11 @@ public class GUIController : MonoBehaviour
     public void ChangeUISelection(GameObject uiObject)
     {
         if (PointerNavigation)
+        {
+            if(EventSystem.current.currentSelectedGameObject != null)
+                StartCoroutine(DelayUISelectionChange(null));
             return;
+        }
         StartCoroutine(DelayUISelectionChange(uiObject));
     }
     private IEnumerator DelayUISelectionChange(GameObject uiObject)
