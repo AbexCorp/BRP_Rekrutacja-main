@@ -98,6 +98,11 @@ public class GUIController : MonoBehaviour
         else if(_activeViews.Contains(view))
             _activeViews.Remove(view);
         SetDefaultUiSelection();
+
+        if (_activeViews.Count == 0)
+            SetActiveWorldSpaceUI(true);
+        else
+            SetActiveWorldSpaceUI(false);
     }
     public void SetDefaultUiSelection()
     {
@@ -123,6 +128,15 @@ public class GUIController : MonoBehaviour
     {
         yield return null;
         EventSystem.current.SetSelectedGameObject(uiObject);
+    }
+
+    [SerializeField] private GameObject _worldSpaceUI = null;
+    private void SetActiveWorldSpaceUI(bool value)
+    {
+        foreach(var go in _worldSpaceUI.GetComponentsInChildren<Selectable>())
+        {
+            go.interactable = value;
+        }
     }
     
     #endregion
