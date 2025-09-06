@@ -35,7 +35,7 @@ public class GUIController : MonoBehaviour
         if (ScreenBlocker) ScreenBlocker.InitBlocker();
         StartCoroutine(FindInputActions());
         ChangeUISelection(null);
-        GameEvents.EnemyKilled += AddScore;
+        SubscribeScoreEvents();
     }
 
     private void ActiveInGameGUI(bool active)
@@ -152,15 +152,34 @@ public class GUIController : MonoBehaviour
     private int _score = 0;
     public void AddScore(IEnemy enemy)
     {
-        if(enemy.GetEnemyObject().TryGetComponent<SoulEnemy>(out var e))
+        int score = 0;
+        if (enemy.GetEnemyObject().TryGetComponent<SoulEnemy>(out var e))
         {
             if (e.DiedToVulnerability)
-                _score += 1;
+                score += 1;
         }
-        _score += 2;
-        if(_score < 0)
+        score += 2;
+        AddScore(score);
+    }
+    public void AddScore(SoulInformation soulInfo)
+    {
+        int score = 0;
+        //check soul value
+            score += 3;
+        //
+        AddScore(score);
+    }
+    private void AddScore(int amount)
+    {
+        _score += amount;
+        if (_score < 0)
             _score = int.MaxValue;
         _scoreCounter.text = $"Score: {_score}";
+    }
+    private void SubscribeScoreEvents()
+    {
+        GameEvents.EnemyKilled += AddScore;
+        GameEvents.SoulUsed += AddScore;
     }
 
     #endregion
